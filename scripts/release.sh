@@ -101,6 +101,9 @@ fi
 bold "committing + pushing $tag (tap the security key)"
 git commit -q -am "$tag"
 git push -q origin main
+# gh creates the tag on GitHub; tag the same commit locally too, so the next
+# release's "changes since" (git describe) starts from here.
+git tag "$tag"
 
 bold "publishing the GitHub release"
 gh release create "$tag" --target main --title "$tag" --notes-file "$notes" "$tarball" "$tarball.sha256"
