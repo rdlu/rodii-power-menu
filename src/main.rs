@@ -815,6 +815,7 @@ usage: rodii-power-menu [COMMAND]
   validate [FILE]    check the config, print problems with line numbers;
                      exit 1 if there are any (like `niri validate`)
   print [FILE]       show every page as fuzzel would get it, with live states
+  -V, --version      print the version
   -h, --help         this help
 
 config: $RODII_POWER_MENU_CONFIG, else $XDG_CONFIG_HOME/rodii-power-menu/menu.kdl";
@@ -827,6 +828,10 @@ fn main() {
         None | Some("validate" | "print") => {}
         Some("-h" | "--help") => {
             println!("{USAGE}");
+            return;
+        }
+        Some("-V" | "--version") => {
+            println!("{NAME} {}", env!("CARGO_PKG_VERSION"));
             return;
         }
         Some(other) => {

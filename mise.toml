@@ -44,3 +44,20 @@ flag "--notes <file>" help="Release notes file (default: commit subjects since t
 flag "--dry-run" help="Check, bump and package, print the notes, then restore — publishes nothing"
 '''
 run = "sh scripts/release.sh"
+
+[tasks.status]
+description = "What's installed: version, local vs. release build, latest release, config check"
+run = "sh scripts/status.sh"
+
+[tasks.install-release]
+description = "Install a prebuilt release (static binary, no Rust needed); latest by default"
+usage = 'arg "[version]" help="Version to install, e.g. 0.1.1 (default: latest)"'
+run = "sh scripts/install-release.sh"
+
+[tasks.uninstall]
+description = "Remove ~/.local/bin/rodii-power-menu and its runtime caches (keeps your menu.kdl)"
+run = [
+  "rm -f ~/.local/bin/rodii-power-menu",
+  'rm -rf "${XDG_RUNTIME_DIR:-/tmp}/rodii-power-menu"',
+  "echo 'uninstalled; ~/.config/rodii-power-menu/menu.kdl left in place'",
+]

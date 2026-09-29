@@ -16,6 +16,9 @@ die() {
 	exit 1
 }
 
+# usage_* are set by mise from the task's usage spec (see mise.toml).
+# shellcheck disable=SC2154
+: "${usage_version:?run this via: mise run release <version>}"
 v=${usage_version#v}
 tag="v$v"
 dry=${usage_dry_run:-false}

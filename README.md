@@ -148,6 +148,15 @@ mise run install        # build → ~/.local/bin/rodii-power-menu, then validate
 cargo build --release && install -Dm755 target/release/rodii-power-menu ~/.local/bin/
 ```
 
+From a checkout, mise tasks manage the local install:
+
+| Task | Does |
+| --- | --- |
+| `mise run install` | Builds from source into `~/.local/bin`, then validates the config. |
+| `mise run install-release [version]` | Installs the latest (or a given) prebuilt release. No Rust needed; the checksum is verified. |
+| `mise run status` | Shows the installed version, whether it's a local or release build, whether it matches this checkout, the latest release, and a config check. |
+| `mise run uninstall` | Removes the binary and its runtime caches. Your `menu.kdl` is kept. |
+
 Then:
 
 1. Write `~/.config/rodii-power-menu/menu.kdl`. Start from the [Config](#config)
