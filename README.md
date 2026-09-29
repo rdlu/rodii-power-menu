@@ -132,7 +132,7 @@ x86_64 Linux binary. It doesn't depend on your system's glibc, so it runs on any
 distro:
 
 ```sh
-v=v0.1.0
+v=v0.1.1
 curl -LO https://github.com/rdlu/rodii-power-menu/releases/download/$v/rodii-power-menu-$v-x86_64-linux.tar.gz
 tar -xzf rodii-power-menu-$v-x86_64-linux.tar.gz
 install -Dm755 rodii-power-menu-$v-x86_64-linux/rodii-power-menu ~/.local/bin/rodii-power-menu

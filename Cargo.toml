@@ -1,6 +1,6 @@
 [package]
 name = "rodii-power-menu"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Which-key style power/system menu for niri, described by a KDL file, shown with fuzzel"
 license = "MIT"
