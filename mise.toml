@@ -35,3 +35,12 @@ tar -C dist -czf "dist/$name.tar.gz" "$name"
 (cd dist && sha256sum "$name.tar.gz" > "$name.tar.gz.sha256")
 echo "dist/$name.tar.gz"
 '''
+
+[tasks.release]
+description = "Bump, build, commit + push, publish a GitHub release, verify the download"
+usage = '''
+arg "<version>" help="New version, e.g. 0.1.2 (a leading v is fine)"
+flag "--notes <file>" help="Release notes file (default: commit subjects since the last tag + install snippet)"
+flag "--dry-run" help="Check, bump and package, print the notes, then restore — publishes nothing"
+'''
+run = "sh scripts/release.sh"

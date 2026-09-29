@@ -157,6 +157,28 @@ Then:
 2. Check it with `rodii-power-menu validate`.
 3. Bind a key to `~/.local/bin/rodii-power-menu`.
 
+## Releasing
+
+```sh
+mise run release 0.1.2 --dry-run   # check, bump and package, show the notes, then restore
+mise run release 0.1.2             # the real thing
+mise run release 0.1.2 --notes notes.md
+```
+
+`release` first checks that the version is newer, the tag is free, `main` is
+clean and in sync with origin, the musl target is installed and clippy passes.
+Then it:
+
+1. bumps `Cargo.toml`, `Cargo.lock` and the README install line;
+2. builds the static tarball and checks that it's static and runs;
+3. commits and pushes `vX.Y.Z`;
+4. publishes the GitHub release;
+5. downloads the release back and verifies the checksum.
+
+If you don't pass `--notes`, the release notes are the commit subjects since the
+last tag, plus the install snippet. The one-time setup is
+`rustup target add x86_64-unknown-linux-musl`.
+
 ## License
 
 MIT
