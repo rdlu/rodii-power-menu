@@ -105,12 +105,23 @@ What's left is mostly the state commands themselves. `pactl` answers in about
 
 ## Install
 
-You need:
+You need **fuzzel** 1.15 or newer (the menu relies on `--index`, `--with-nth`
+and `--match-nth`) and a compositor that can bind a key to a command. The
+examples use niri.
 
-- **fuzzel** 1.15 or newer. The menu relies on `--index`, `--with-nth` and `--match-nth`.
-- **A Rust toolchain** to build it.
-- **A key binding** in your compositor. The examples use niri, but anything that
-  can spawn a command works.
+**Prebuilt binary.** Each
+[release](https://github.com/rdlu/rodii-power-menu/releases) includes a static
+x86_64 Linux binary. It doesn't depend on your system's glibc, so it runs on any
+distro:
+
+```sh
+v=v0.1.0
+curl -LO https://github.com/rdlu/rodii-power-menu/releases/download/$v/rodii-power-menu-$v-x86_64-linux.tar.gz
+tar -xzf rodii-power-menu-$v-x86_64-linux.tar.gz
+install -Dm755 rodii-power-menu-$v-x86_64-linux/rodii-power-menu ~/.local/bin/rodii-power-menu
+```
+
+**From source.** This needs a Rust toolchain:
 
 ```sh
 git clone https://github.com/rdlu/rodii-power-menu

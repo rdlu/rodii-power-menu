@@ -19,3 +19,19 @@ run = "cargo run --release -q -- validate"
 [tasks.print]
 description = "Every page as fuzzel gets it, with live states and timings"
 run = "cargo run --release -q -- print"
+
+[tasks.package]
+description = "Static (musl) release tarball + sha256 in dist/, for a GitHub release"
+# musl: fully static, runs on any x86_64 Linux regardless of its glibc.
+# One-time: rustup target add x86_64-unknown-linux-musl
+run = '''
+set -e
+v="v$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+name="rodii-power-menu-$v-x86_64-linux"
+cargo build --release --target x86_64-unknown-linux-musl
+rm -rf "dist/$name" && mkdir -p "dist/$name"
+cp target/x86_64-unknown-linux-musl/release/rodii-power-menu README.md LICENSE "dist/$name/"
+tar -C dist -czf "dist/$name.tar.gz" "$name"
+(cd dist && sha256sum "$name.tar.gz" > "$name.tar.gz.sha256")
+echo "dist/$name.tar.gz"
+'''
