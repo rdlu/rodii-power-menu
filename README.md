@@ -105,6 +105,30 @@ What's left is mostly the state commands themselves. `pactl` answers in about
 
 ## Install
 
+You need:
+
+- **fuzzel** 1.15 or newer. The menu relies on `--index`, `--with-nth` and `--match-nth`.
+- **A Rust toolchain** to build it.
+- **A key binding** in your compositor. The examples use niri, but anything that
+  can spawn a command works.
+
+```sh
+git clone https://github.com/rdlu/rodii-power-menu
+cd rodii-power-menu
+mise run install        # build → ~/.local/bin/rodii-power-menu, then validate
+# without mise:
+cargo build --release && install -Dm755 target/release/rodii-power-menu ~/.local/bin/
 ```
-mise run install      # cargo build --release → ~/.local/bin/rodii-power-menu, then validate
-```
+
+Then:
+
+1. Write `~/.config/rodii-power-menu/menu.kdl`. Start from the [Config](#config)
+   example, or from the author's full menu in
+   [rdlu/dotfiles](https://github.com/rdlu/dotfiles/blob/main/niri/dot-config/rodii-power-menu/menu.kdl).
+   Its commands call the author's own scripts, so adapt them to yours.
+2. Check it with `rodii-power-menu validate`.
+3. Bind a key to `~/.local/bin/rodii-power-menu`.
+
+## License
+
+MIT
