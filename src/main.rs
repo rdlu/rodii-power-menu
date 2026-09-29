@@ -23,6 +23,13 @@ const NAME: &str = "rodii-power-menu";
 const GROUP_WIDTH: usize = 12;
 /// Width a leaf's "icon label" is padded to before its `detail` column.
 const DETAIL_WIDTH: usize = 22;
+/// Keywords are appended to the row text at this column, past the right edge
+/// of any sane fuzzel window, so they're matched but not seen. fuzzel only
+/// ranks results (and highlights matches) when it matches the displayed text:
+/// hiding keywords in a --match-nth column instead left results in input
+/// order, so "bt" put Reboot above Bluetooth. Cost: fuzzel draws "…" at the
+/// right edge of rows that have keywords.
+const KEYWORD_COLUMN: usize = 150;
 
 // ---------------------------------------------------------------- config ---
 //
@@ -719,7 +726,7 @@ fn pick(cfg: &Config, rt: &Runtime, prompt: &str, rows: &[Row], visible: usize) 
     }
     let bin = env::var("RODII_FUZZEL").unwrap_or_else(|_| "fuzzel".into());
     let child = Command::new(&bin)
-        .args(["--dmenu", "--index", "--with-nth=1", "--match-nth={1} {2}", "--minimal-lines"])
+        .args(["--dmenu", "--index", "--minimal-lines"])
         .arg(format!("--prompt={prompt} › "))
         .arg(format!("--lines={}", visible.max(1)))
         .args(&cfg.fuzzel)
@@ -734,9 +741,14 @@ fn pick(cfg: &Config, rt: &Runtime, prompt: &str, rows: &[Row], visible: usize) 
 
     let mut input = String::new();
     for r in rows {
-        input.push_str(&r.text);
-        input.push('\t');
-        input.push_str(&r.keywords);
+        // --index reports the original input position even after fuzzel
+        // re-sorts the matches, so rows[i] is always the row picked.
+        if r.keywords.is_empty() {
+            input.push_str(&r.text);
+        } else {
+            input.push_str(&pad(&r.text, KEYWORD_COLUMN));
+            input.push_str(&r.keywords);
+        }
         input.push('\n');
     }
     if let Some(mut stdin) = child.stdin.take() {

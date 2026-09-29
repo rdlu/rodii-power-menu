@@ -14,6 +14,17 @@ shown with [fuzzel](https://codeberg.org/dnkl/fuzzel) and described by a KDL fil
 - **Fast.** About 12 ms from launch until fuzzel starts on the author's machine
   (the fish script it replaced took about 111 ms). See [Speed](#speed).
 
+## Screenshots
+
+| Mod+Escape: first page | Typing searches everything, ranked |
+| --- | --- |
+| ![The Power page](assets/power.png) | ![Searching "bt" puts Bluetooth first](assets/search.png) |
+| **Mod+Escape again: next page** | **A group, with live device names** |
+| ![The Tools page](assets/tools.png) | ![The Audio group](assets/audio.png) |
+
+These screenshots show the author's [menu](https://github.com/rdlu/dotfiles/blob/main/niri/dot-config/rodii-power-menu/menu.kdl)
+with their fuzzel theme. They were taken in a headless sway session with `grim`.
+
 ## Usage
 
 ```
@@ -83,6 +94,12 @@ Tips:
   glyphs are invisible in most tools and get lost in edits.
 - **Quotes in commands:** put commands that contain `"` in raw strings: `#"…"#`.
 - **Switching things off:** put `/-` before any node to disable it.
+- **Keywords and the `…`:** keywords are appended to the row far past the right
+  edge of the window, so fuzzel matches and ranks them without showing them.
+  fuzzel draws a `…` on rows that have keywords. (Keeping them in a separate,
+  hidden `--match-nth` column would turn off fuzzel's ranking, and then `bt`
+  put Reboot above Bluetooth.) If two items share a keyword, the shorter row
+  wins, so keep each keyword on the item it should find.
 
 ## Speed
 
