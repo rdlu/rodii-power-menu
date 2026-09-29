@@ -85,6 +85,10 @@ Inside an `item`:
   variant, and `when "*"` is the fallback. A variant can override `icon`,
   `label`, `run`, `keywords` and `hint`.
 - **`detail "cmd"`:** the first line of its output is shown as a right-hand column.
+  A detail normally shows its cached value at once and refreshes in the
+  background. Add `fresh=#true` to wait for it like a `state`: use this for fast
+  values that change often, such as the Wi-Fi network
+  (`detail "iw dev | sed -n 's/^[[:space:]]*ssid //p'" fresh=#true`).
 - **Long values as child nodes:** `run`, `icon` and `keywords` can also be written
   as child nodes.
 
@@ -112,8 +116,8 @@ The menu runs the same steps every time it opens:
 2. **State checks:** all `state` and `detail` commands start in parallel. The menu
    waits for `state` commands up to `state-timeout-ms`. Any that miss the budget
    show their last known value, cached in `state-cache`.
-3. **Details:** `detail` commands never block once they have a cached value. They
-   only refresh it for the next open.
+3. **Details:** `detail` commands never block once they have a cached value
+   (unless marked `fresh=#true`). They only refresh it for the next open.
 4. **No shell when not needed:** commands without shell syntax run directly,
    without `sh`, which saves about 1 ms each.
 

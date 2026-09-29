@@ -73,6 +73,11 @@ struct Item {
     states: BTreeMap<String, Variant>,
     /// Shell command; its first output line is shown as a right column.
     detail: Option<String>,
+    /// `detail "…" fresh=#true`: wait for it (within the budget) like a
+    /// `state`, instead of showing the cached value, for details that change
+    /// often and answer fast (e.g. the Wi-Fi network).
+    #[serde(default)]
+    detail_fresh: bool,
 }
 
 #[derive(Clone, Default, Serialize, Deserialize)]
@@ -357,7 +362,14 @@ impl Parser<'_> {
             match ck {
                 "run" | "state" | "detail" | "icon" | "keywords" => {
                     let Some(v) = self.label(c) else { continue };
-                    self.props(c, &[]);
+                    let cp = self.props(c, if ck == "detail" { &["fresh"] } else { &[] });
+                    if let Some(f) = cp.get("fresh") {
+                        match f.as_str() {
+                            "true" => it.detail_fresh = true,
+                            "false" => {}
+                            _ => self.err(c, "fresh takes #true or #false"),
+                        }
+                    }
                     let slot = match ck {
                         "run" => &mut it.run,
                         "state" => &mut it.state,
@@ -499,7 +511,12 @@ impl States {
         fn collect(items: &[Item], states: &mut HashSet<String>, details: &mut HashSet<String>) {
             for it in items {
                 states.extend(it.state.clone());
-                details.extend(it.detail.clone());
+                // A fresh detail is waited for, exactly like a state.
+                if it.detail_fresh {
+                    states.extend(it.detail.clone());
+                } else {
+                    details.extend(it.detail.clone());
+                }
                 if let Some(sub) = &it.items {
                     collect(sub, states, details);
                 }
