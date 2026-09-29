@@ -1,0 +1,21 @@
+[tasks.build]
+description = "Release build"
+run = "cargo build --release"
+
+[tasks.install]
+description = "Build and install to ~/.local/bin/rodii-power-menu (niri binds Mod+Escape to it)"
+depends = ["build"]
+# rm first: never write through a stale symlink left at the target path
+run = [
+  "rm -f ~/.local/bin/rodii-power-menu",
+  "install -Dm755 target/release/rodii-power-menu ~/.local/bin/rodii-power-menu",
+  "~/.local/bin/rodii-power-menu validate",
+]
+
+[tasks.validate]
+description = "Check the menu config (like `niri validate`)"
+run = "cargo run --release -q -- validate"
+
+[tasks.print]
+description = "Every page as fuzzel gets it, with live states and timings"
+run = "cargo run --release -q -- print"

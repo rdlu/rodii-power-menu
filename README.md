@@ -1,0 +1,110 @@
+# rodii-power-menu
+
+A which-key style power / system menu for [niri](https://github.com/YaLTeR/niri),
+shown with [fuzzel](https://codeberg.org/dnkl/fuzzel) and described by a KDL file.
+
+- **Pages.** Bind it to a key (Mod+Escape). Pressing the key again while the menu
+  is open flips to the next page, which keeps the first page short.
+- **Groups.** `▸` rows open submenus. Esc goes back one level, and closes the menu
+  from a page.
+- **Flat search.** Every page also gives fuzzel all the other entries, below the
+  visible rows, so typing finds anything from anywhere.
+- **Live items.** A `state` shell command picks a `when` variant, for example
+  "Mute" versus "Unmute" or "SSH key: loaded → lock".
+- **Fast.** About 12 ms from launch until fuzzel starts on the author's machine
+  (the fish script it replaced took about 111 ms). See [Speed](#speed).
+
+## Usage
+
+```
+rodii-power-menu              open the menu
+rodii-power-menu validate     check the config: line-numbered problems, exit 1 if any
+rodii-power-menu print        every page as fuzzel gets it, with live states + timings
+```
+
+The config is read from `$RODII_POWER_MENU_CONFIG`, or else
+`$XDG_CONFIG_HOME/rodii-power-menu/menu.kdl`. `validate` and `print` also accept
+a file path.
+
+niri:
+
+```kdl
+Mod+Escape hotkey-overlay-title="Power menu (press again: next page)" { spawn "~/.local/bin/rodii-power-menu"; }
+```
+
+## Config
+
+```kdl
+state-timeout-ms 40                                  // budget for state checks
+fuzzel "--font=JetBrainsMono Nerd Font Mono:size=14" // extra fuzzel args
+
+page "Power" {
+    item "Lock" icon="\u{f023}" run="loginctl lock-session"
+    item "Bluetooth" id="bluetooth" icon="\u{f294}" run="ghostty -e bluetui" keywords="bt"
+
+    group "Audio" icon="\u{f028}" hint="mute · mixers" {
+        item "Mute speakers" run="swayosd-client --output-volume mute-toggle" {
+            state "pactl get-sink-mute @DEFAULT_SINK@"
+            when "Mute: yes" label="Unmute speakers"
+            detail #"wpctl inspect @DEFAULT_AUDIO_SINK@ | awk -F'"' '/node.nick/ {print $2}'"#
+        }
+    }
+
+    link "More tools" page="Tools" hint="Mod+Esc again"
+}
+
+page "Tools" {
+    group "Network" {
+        use "bluetooth"
+    }
+}
+```
+
+| Node | Meaning |
+| --- | --- |
+| `item "Label" icon= run= keywords=` | Runs a command with `sh -c`, with `~/.local/bin` on `PATH`. |
+| `group "Label" icon= hint= { … }` | A `▸` row that opens a submenu. Groups can be nested. |
+| `link "Label" page="Name" hint=` | A `▸` row that jumps to another page. |
+| `use "id"` | The item or group that has `id="id"`. It can be defined anywhere, in any order. |
+| `define { … }` | Items that appear only through `use`. |
+
+Inside an `item`:
+
+- **`state "cmd"`:** the first line of its output picks a `when "<output>"`
+  variant, and `when "*"` is the fallback. A variant can override `icon`,
+  `label`, `run`, `keywords` and `hint`.
+- **`detail "cmd"`:** the first line of its output is shown as a right-hand column.
+- **Long values as child nodes:** `run`, `icon` and `keywords` can also be written
+  as child nodes.
+
+Tips:
+
+- **Icons:** write nerd-font icons as escapes (`"\u{f023}"`). The private-use
+  glyphs are invisible in most tools and get lost in edits.
+- **Quotes in commands:** put commands that contain `"` in raw strings: `#"…"#`.
+- **Switching things off:** put `/-` before any node to disable it.
+
+## Speed
+
+The menu runs the same steps every time it opens:
+
+1. **Config:** the parsed menu is compiled into `$XDG_RUNTIME_DIR/rodii-power-menu/menu.bin`
+   (postcard). It's reused while the KDL file and the binary are unchanged
+   (size and mtime), so a normal open skips the KDL parser: about 0.05 ms instead
+   of about 2 ms.
+2. **State checks:** all `state` and `detail` commands start in parallel. The menu
+   waits for `state` commands up to `state-timeout-ms`. Any that miss the budget
+   show their last known value, cached in `state-cache`.
+3. **Details:** `detail` commands never block once they have a cached value. They
+   only refresh it for the next open.
+4. **No shell when not needed:** commands without shell syntax run directly,
+   without `sh`, which saves about 1 ms each.
+
+What's left is mostly the state commands themselves. `pactl` answers in about
+5 ms, and `wpctl` in about 8–10 ms.
+
+## Install
+
+```
+mise run install      # cargo build --release → ~/.local/bin/rodii-power-menu, then validate
+```
