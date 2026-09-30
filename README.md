@@ -1,7 +1,9 @@
 # rodii-power-menu
 
-A which-key style power / system menu for [niri](https://github.com/YaLTeR/niri),
-shown with [fuzzel](https://codeberg.org/dnkl/fuzzel) and described by a KDL file.
+A power / system menu for [niri](https://github.com/YaLTeR/niri) that you can
+browse or search: pages and groups show what's there, and typing searches all of
+them at once. Shown with [fuzzel](https://codeberg.org/dnkl/fuzzel) and described
+by a KDL file.
 
 - **Pages.** Bind it to a key (Mod+Escape). Pressing the key again while the menu
   is open flips to the next page, which keeps the first page short.

@@ -1,5 +1,5 @@
-//! rodii-power-menu — which-key style power/system menu for niri, shown with
-//! fuzzel and described by a KDL file (see README.md for the format).
+//! rodii-power-menu — a browsable, searchable power/system menu for niri,
+//! shown with fuzzel and described by a KDL file (see README.md for the format).
 //!
 //! Speed is the point: the parsed menu is cached in compiled form (the KDL
 //! parser only runs after an edit), and every `state`/`detail` shell command
