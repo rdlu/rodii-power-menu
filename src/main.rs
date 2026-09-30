@@ -30,6 +30,13 @@ const DETAIL_WIDTH: usize = 22;
 /// order, so "bt" put Reboot above Bluetooth. Cost: fuzzel draws "…" at the
 /// right edge of rows that have keywords.
 const KEYWORD_COLUMN: usize = 150;
+/// Hints and details are joined to the row with no-break spaces (U+00A0),
+/// which look the same. fuzzel's tie-break prefers a match that starts a word,
+/// and it only counts real spaces as word starts, so a label or keyword match
+/// beats one in the side text: "bt" finds Bluetooth before a device called
+/// "BT20 Pro". Without this the side text wins, since it's further left than
+/// the keywords.
+const NBSP: char = '\u{a0}';
 
 // ---------------------------------------------------------------- config ---
 //
@@ -675,7 +682,7 @@ fn lines(rows: &[Row]) -> Vec<String> {
         .max(DETAIL_WIDTH);
     rows.iter()
         .map(|r| match &r.detail {
-            Some(d) => format!("{}{d}", pad(&r.text, width)),
+            Some(d) => format!("{}{}", pad(&r.text, width - 1), side_text(d)),
             None => r.text.clone(),
         })
         .collect()
@@ -688,6 +695,11 @@ fn pad(s: &str, width: usize) -> String {
     } else {
         format!("{s}{}", " ".repeat(width - n))
     }
+}
+
+/// A hint or detail with its leading gap, spaced with NBSPs (see [`NBSP`]).
+fn side_text(s: &str) -> String {
+    std::iter::once(NBSP).chain(s.chars().map(|c| if c == ' ' { NBSP } else { c })).collect()
 }
 
 fn clean(s: &str) -> String {
@@ -712,7 +724,7 @@ fn resolve(it: &Item, st: &States, pages: &[Page]) -> Option<Row> {
     // of the fixed hint.
     let detail = it.detail.as_deref().map(|c| st.get(c)).filter(|d| !d.is_empty());
     let side = detail.unwrap_or(&hint);
-    let nav = |name: &str| format!("{lead}{}▸  {side}", pad(name, GROUP_WIDTH)).trim_end().to_string();
+    let nav = |name: &str| format!("{lead}{}▸ {}", pad(name, GROUP_WIDTH), side_text(side)).trim_end().to_string();
 
     let (text, action) = if let Some(sub) = &it.items {
         (nav(&label), Action::Group(label.clone(), sub.clone()))

@@ -108,6 +108,10 @@ Tips:
   hidden `--match-nth` column would turn off fuzzel's ranking, and then `bt`
   put Reboot above Bluetooth.) If two items share a keyword, the shorter row
   wins, so keep each keyword on the item it should find.
+- **Labels and keywords beat hints and details:** a whole-word match in a label
+  or keyword ranks above the same match in a hint or `detail`. So `bt` finds
+  Bluetooth before a headset whose name starts with "BT". (The side text is
+  joined with no-break spaces, which fuzzel doesn't treat as word starts.)
 
 ## Speed
 
