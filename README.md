@@ -74,8 +74,8 @@ page "Tools" {
 | Node | Meaning |
 | --- | --- |
 | `item "Label" icon= run= keywords=` | Runs a command with `sh -c`, with `~/.local/bin` on `PATH`. |
-| `group "Label" icon= hint= { … }` | A `▸` row that opens a submenu. Groups can be nested. |
-| `link "Label" page="Name" hint=` | A `▸` row that jumps to another page. |
+| `group "Label" icon= hint= detail= fresh= { … }` | A `▸` row that opens a submenu. Groups can be nested. A `detail` replaces the hint (e.g. a clock). |
+| `link "Label" page="Name" hint= detail= fresh=` | A `▸` row that jumps to another page. |
 | `use "id"` | The item or group that has `id="id"`. It can be defined anywhere, in any order. |
 | `define { … }` | Items that appear only through `use`. |
 
@@ -89,6 +89,8 @@ Inside an `item`:
   background. Add `fresh=#true` to wait for it like a `state`: use this for fast
   values that change often, such as the Wi-Fi network
   (`detail "iw dev | sed -n 's/^[[:space:]]*ssid //p'" fresh=#true`).
+  Groups and links take `detail` and `fresh` as properties, and their detail
+  replaces the hint. Details on one screen are aligned in a single column.
 - **Long values as child nodes:** `run`, `icon` and `keywords` can also be written
   as child nodes.
 

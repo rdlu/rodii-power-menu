@@ -318,22 +318,24 @@ impl Parser<'_> {
                 "item" => self.item(n, line),
                 "group" => {
                     let Some(label) = self.label(n) else { continue };
-                    let mut pr = self.props(n, &["icon", "hint", "keywords", "id"]);
+                    let mut pr = self.props(n, &["icon", "hint", "keywords", "id", "detail", "fresh"]);
                     let items = self.items(n.children());
                     if items.is_empty() {
                         self.err(n, &format!("group {label:?} has no items"));
                     }
-                    Some(Item { line, label, id: pr.remove("id"), icon: take(&mut pr, "icon"), hint: take(&mut pr, "hint"), keywords: take(&mut pr, "keywords"), items: Some(items), ..Default::default() })
+                    let detail_fresh = self.fresh(n, &mut pr);
+                    Some(Item { line, label, id: pr.remove("id"), icon: take(&mut pr, "icon"), hint: take(&mut pr, "hint"), keywords: take(&mut pr, "keywords"), detail: pr.remove("detail"), detail_fresh, items: Some(items), ..Default::default() })
                 }
                 "link" => {
                     let Some(label) = self.label(n) else { continue };
-                    let mut pr = self.props(n, &["page", "icon", "hint", "keywords", "id"]);
+                    let mut pr = self.props(n, &["page", "icon", "hint", "keywords", "id", "detail", "fresh"]);
                     let Some(page) = pr.remove("page") else {
                         self.err(n, &format!("link {label:?} needs page=\"…\""));
                         continue;
                     };
                     self.no_children(n);
-                    Some(Item { line, label, page: Some(page), id: pr.remove("id"), icon: take(&mut pr, "icon"), hint: take(&mut pr, "hint"), keywords: take(&mut pr, "keywords"), ..Default::default() })
+                    let detail_fresh = self.fresh(n, &mut pr);
+                    Some(Item { line, label, page: Some(page), id: pr.remove("id"), icon: take(&mut pr, "icon"), hint: take(&mut pr, "hint"), keywords: take(&mut pr, "keywords"), detail: pr.remove("detail"), detail_fresh, ..Default::default() })
                 }
                 "use" => {
                     let Some(id) = self.label(n) else { continue };
@@ -353,8 +355,9 @@ impl Parser<'_> {
 
     fn item(&mut self, n: &KdlNode, line: usize) -> Option<Item> {
         let label = self.label(n)?;
-        let mut pr = self.props(n, &["icon", "run", "keywords", "id", "state", "detail"]);
-        let mut it = Item { line, label, id: pr.remove("id"), icon: take(&mut pr, "icon"), run: pr.remove("run"), keywords: take(&mut pr, "keywords"), state: pr.remove("state"), detail: pr.remove("detail"), ..Default::default() };
+        let mut pr = self.props(n, &["icon", "run", "keywords", "id", "state", "detail", "fresh"]);
+        let detail_fresh = self.fresh(n, &mut pr);
+        let mut it = Item { line, label, id: pr.remove("id"), icon: take(&mut pr, "icon"), run: pr.remove("run"), keywords: take(&mut pr, "keywords"), state: pr.remove("state"), detail: pr.remove("detail"), detail_fresh, ..Default::default() };
         // Long values can also be child nodes: `run "…"`, `state "…"`, …,
         // plus `when "<state output>" label=… run=…` variants.
         for c in n.children().map(KdlDocument::nodes).unwrap_or(&[]) {
@@ -401,6 +404,18 @@ impl Parser<'_> {
             return None;
         }
         Some(it)
+    }
+
+    /// The `fresh=#true|#false` property (it applies to the node's detail).
+    fn fresh(&mut self, n: &KdlNode, pr: &mut HashMap<String, String>) -> bool {
+        match pr.remove("fresh").as_deref() {
+            None | Some("false") => false,
+            Some("true") => true,
+            Some(_) => {
+                self.err(n, "fresh takes #true or #false");
+                false
+            }
+        }
     }
 
     fn no_children(&mut self, n: &KdlNode) {
@@ -633,6 +648,8 @@ enum Action {
 #[derive(Clone)]
 struct Row {
     text: String,
+    /// A leaf's right-hand column; aligned per screen by `lines`.
+    detail: Option<String>,
     keywords: String,
     action: Action,
 }
@@ -644,6 +661,24 @@ impl Row {
             _ => None,
         }
     }
+}
+
+/// The rows as displayed: details start in one column, just past the longest
+/// label that has one (never before DETAIL_WIDTH), so they line up per screen.
+fn lines(rows: &[Row]) -> Vec<String> {
+    let width = rows
+        .iter()
+        .filter(|r| r.detail.is_some())
+        .map(|r| r.text.chars().count() + 2)
+        .max()
+        .unwrap_or(0)
+        .max(DETAIL_WIDTH);
+    rows.iter()
+        .map(|r| match &r.detail {
+            Some(d) => format!("{}{d}", pad(&r.text, width)),
+            None => r.text.clone(),
+        })
+        .collect()
 }
 
 fn pad(s: &str, width: usize) -> String {
@@ -673,7 +708,11 @@ fn resolve(it: &Item, st: &States, pages: &[Page]) -> Option<Row> {
         }
     }
     let lead = if icon.is_empty() { String::new() } else { format!("{icon} ") };
-    let nav = |name: &str| format!("{lead}{}▸  {hint}", pad(name, GROUP_WIDTH)).trim_end().to_string();
+    // Group / link rows show their live detail, when they have one, in place
+    // of the fixed hint.
+    let detail = it.detail.as_deref().map(|c| st.get(c)).filter(|d| !d.is_empty());
+    let side = detail.unwrap_or(&hint);
+    let nav = |name: &str| format!("{lead}{}▸  {side}", pad(name, GROUP_WIDTH)).trim_end().to_string();
 
     let (text, action) = if let Some(sub) = &it.items {
         (nav(&label), Action::Group(label.clone(), sub.clone()))
@@ -682,13 +721,13 @@ fn resolve(it: &Item, st: &States, pages: &[Page]) -> Option<Row> {
         (nav(&label), Action::Page(idx))
     } else {
         let run = run?;
-        let mut text = format!("{lead}{label}");
-        if let Some(d) = it.detail.as_deref().map(|c| st.get(c)).filter(|d| !d.is_empty()) {
-            text = format!("{}{d}", pad(&text, DETAIL_WIDTH));
-        }
-        (text, Action::Run(run))
+        (format!("{lead}{label}"), Action::Run(run))
     };
-    Some(Row { text: clean(&text), keywords: clean(&keywords), action })
+    let detail = match action {
+        Action::Run(_) => detail.map(clean),
+        _ => None, // nav rows already show theirs in place of the hint
+    };
+    Some(Row { text: clean(&text), detail, keywords: clean(&keywords), action })
 }
 
 fn rows(items: &[Item], st: &States, pages: &[Page]) -> Vec<Row> {
@@ -757,13 +796,13 @@ fn pick(cfg: &Config, rt: &Runtime, prompt: &str, rows: &[Row], visible: usize) 
     let _ = fs::write(rt.fuzzel(), child.id().to_string());
 
     let mut input = String::new();
-    for r in rows {
+    for (r, line) in rows.iter().zip(lines(rows)) {
         // --index reports the original input position even after fuzzel
         // re-sorts the matches, so rows[i] is always the row picked.
         if r.keywords.is_empty() {
-            input.push_str(&r.text);
+            input.push_str(&line);
         } else {
-            input.push_str(&pad(&r.text, KEYWORD_COLUMN));
+            input.push_str(&pad(&line, KEYWORD_COLUMN));
             input.push_str(&r.keywords);
         }
         input.push('\n');
@@ -905,8 +944,9 @@ fn main() {
         for pg in &cfg.pages {
             let vis = rows(&pg.items, &st, &cfg.pages);
             println!("=== {} (visible {})", pg.name, vis.len());
-            for r in with_tail(vis, &leaves) {
-                println!("{}\t[{}]", r.text, r.keywords);
+            let all = with_tail(vis, &leaves);
+            for (r, line) in all.iter().zip(lines(&all)) {
+                println!("{line}\t[{}]", r.keywords);
             }
         }
         println!(
