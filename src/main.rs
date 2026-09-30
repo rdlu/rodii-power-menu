@@ -210,10 +210,9 @@ fn run_menu(cfg: &Config, rt: &Runtime, st: &mut States) -> Option<String> {
                 page = (page + 1) % cfg.pages.len();
                 stack.clear();
             }
+            // Esc backs out of a group; out of the page, it closes the menu.
             Pick::Cancel => {
-                if stack.pop().is_none() {
-                    return None;
-                }
+                stack.pop()?;
             }
             Pick::Chosen(i) => match &list[i].action {
                 Action::Run(c) => return Some(c.clone()),
