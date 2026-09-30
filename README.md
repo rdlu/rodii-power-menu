@@ -16,11 +16,13 @@ shown with [fuzzel](https://codeberg.org/dnkl/fuzzel) and described by a KDL fil
 
 ## Screenshots
 
-| Mod+Escape: first page | Typing searches everything, ranked |
+| Mod+Escape: first page | Typing searches every page |
 | --- | --- |
-| ![The Power page](assets/power.png) | ![Searching "bt" puts Bluetooth first](assets/search.png) |
+| ![The Power page](assets/power.png) | ![Searching "munich" finds the Clocks items on the Tools page](assets/search.png) |
 | **Mod+Escape again: next page** | **A group, with live device names** |
-| ![The Tools page](assets/tools.png) | ![The Audio group](assets/audio.png) |
+| ![The Tools page, with a live clock](assets/tools.png) | ![The Audio group](assets/audio.png) |
+| **Groups can show live values** | **Each row shows what it will copy** |
+| ![The Clocks group: time zones and timestamps](assets/clocks.png) | ![The Munich clock group: ISO date and datetime](assets/munich.png) |
 
 These screenshots show the author's [menu](https://github.com/rdlu/dotfiles/blob/main/niri/dot-config/rodii-power-menu/menu.kdl)
 with their fuzzel theme. They were taken in a headless sway session with `grim`.
