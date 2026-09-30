@@ -1,6 +1,9 @@
 [tasks.build]
-description = "Release build"
-run = "cargo build --release"
+description = "Clippy (warnings are errors, as in release), then the release build"
+run = [
+  "cargo clippy --release -q --all-targets -- -D warnings",
+  "cargo build --release",
+]
 
 [tasks.install]
 description = "Build and install to ~/.local/bin/rodii-power-menu (niri binds Mod+Escape to it)"
